@@ -50,8 +50,9 @@ end
 ```lua
 require("bbl-twitter")
 c=client(config.consumer_key, config.consumer_secret)
--- at this stage you will be prompted on the console to visit a URL and enter a
--- PIN for out-of-band authentication
+-- The following function will prompt on the console to visit a URL and
+-- enter a PIN for out-of-band authentication
+out_of_band_cli(c)
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
 print(string.format("My secrets are request_token '%s' request_secret '%s'",
 								c.token_key, c.token_secret))

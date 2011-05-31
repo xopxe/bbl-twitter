@@ -167,9 +167,6 @@ function client(consumer_key, consumer_secret, token_key, token_secret, verifier
 	client.token_secret = token_secret or client.token_secret
 
 	assert(client.consumer_key and client.consumer_secret, "you need to specify a consumer key and a consumer secret!")
-	if not (client.token_key and client.token_secret) then
-		out_of_band_cli(client)
-	end
 	return client
 end
 
