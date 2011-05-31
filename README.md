@@ -23,19 +23,19 @@ MIT Licensed as per the LICENSE file.
 
 ## Examples
 
-### Tweet from a client (known preset consumer & request secrets)
+### Tweet from a client (known preset consumer & access secrets)
 (If it's your app then you can authenticate yourself for a developer/hardcoded request secret via http://dev.twitter.com)
 
 ```lua
 require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret, config.request_token, config.request_secret)
+c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
 update_status(c, "Look ma, tweets from Lua!")
 ```
 
 ### Tweet w/ error handling
 ```lua
 require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret, config.request_token, config.request_secret)
+c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
 local r, e = update_status(c, "Look ma, this tweet might not make it!")
 if (not r) then
   if string.match(e, "duplicate") then
@@ -54,7 +54,7 @@ c=client(config.consumer_key, config.consumer_secret)
 -- enter a PIN for out-of-band authentication
 out_of_band_cli(c)
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
-print(string.format("My secrets are request_token '%s' request_secret '%s'",
+print(string.format("My secrets are token_key '%s' tokey_secret '%s'",
 								c.token_key, c.token_secret))
 ```
 
@@ -64,8 +64,8 @@ require("bbl-twitter")
 twitter_config.openssl = "/opt/bin/openssl" -- if your openssl is not on the PATH
 twitter_config.consumer_key = "myconsumerkey"
 twitter_config.consumer_secret = "myconsumersecret"
-twitter_config.token_key = "myrequesttoken"
-twitter_config.token_secret = "myrequestsecret"
+twitter_config.token_key = "myaccesstoken"
+twitter_config.token_secret = "myaccesssecret"
 update_status(client(), "Look ma, global settings!")
 ```
 
