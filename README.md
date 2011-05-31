@@ -20,11 +20,44 @@ It is intended for thin/embedded platforms like OpenWRT routers.
 
 MIT Licensed as per the LICENSE file.
 
+## Overview
+
+To be able to use any twitter feature, you'll have to get a consumer key
+and consumer secret at `https://dev.twitter.com` and pass to to the client
+function.
+
+### Access token
+
+To actually make resource requests (e.g., post tweets), you need to have
+an access token. You can get an access token in three ways:
+
+1. Get a single access token from `https://dev.twitter.com`. This only
+works if you need access just your own account, no others. See
+`https://dev.twitter.com/pages/oauth_single_token` for details.
+
+2. Use the out-of-band (PIN) OAuth flow. This means you present the user
+with a Twitter url he should visit. After clicking the authorize button
+at that url, the user is presented with a verifier (PIN code) that is
+entered back into your application. You can then "trade" the verifier
+for an access token using the OAuth API.
+
+3. Use the full (callback) OAuth flow, which is intended for web
+applications. You redirect the user to a Twitter url. After clicking the
+authorize button at that url, the user is redirected back to your
+webapplication with a verifier in the url. You can again "trade" the
+verifier for an access token using the OAuth API.
+
+If you obtain an access token using method 2. or 3., you can save it
+into persistent (secure) storage for later use (so you don't have to run
+the authorization steps again). The access token can be obtained from
+the `c.token_key` and `c.token_secret` values and can later be
+passed into the `client()` function to reuse it.
 
 ## Examples
 
-### Tweet from a client (known preset consumer & access secrets)
-(If it's your app then you can authenticate yourself for a developer/hardcoded request secret via http://dev.twitter.com)
+### Tweet from a client (known access token)
+This assumes you already have an access token, obtained by any method
+described above.
 
 ```lua
 require("bbl-twitter")
@@ -33,6 +66,7 @@ update_status(c, "Look ma, tweets from Lua!")
 ```
 
 ### Tweet w/ error handling
+
 ```lua
 require("bbl-twitter")
 c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
@@ -46,7 +80,10 @@ if (not r) then
 end
 ```
 
-### Authenticate Out-Of-Band to Twitter
+### Authenticate Out-Of-Band to Twitter using the console
+This example uses the `out_of_band_cli` function, which handles prompting
+the user with the authorization url and prompting for the pin code.
+
 ```lua
 require("bbl-twitter")
 c=client(config.consumer_key, config.consumer_secret)
@@ -54,11 +91,76 @@ c=client(config.consumer_key, config.consumer_secret)
 -- enter a PIN for out-of-band authentication
 out_of_band_cli(c)
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
-print(string.format("My secrets are token_key '%s' tokey_secret '%s'",
+print(string.format("My secrets are token_key '%s' token_secret '%s'",
+                    c.token_key, c.token_secret))
+```
+
+### Authenticate Out-Of-Band to Twitter using other I/O
+This example shows the details of doing out-of-band authorization
+(you'll need to fill in the TODOs with your favorite I/O method to make
+it work, of course).
+
+```lua
+require("bbl-twitter")
+c=client(config.consumer_key, config.consumer_secret)
+-- First get a request token and declare we need to do out-of-band
+-- authorization
+get_request_token(c, 'oob')
+local url = get_authorize_url(c)
+-- TODO: Show the url to the user
+-- TODO: obtain pin from the user
+local pin = ...
+-- Now, trade the pin for an access token
+get_access_token(c, pin)
+
+update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+print(string.format("My secrets are token_key '%s' token_secret '%s'",
+                    c.token_key, c.token_secret))
+```
+
+### Authenticate using a callback
+This example shows how to use this stuff in a webapplication using a
+callback. Again, fill in the TODOs for your webapp.
+
+In the first request, you do:
+
+```lua
+require("bbl-twitter")
+c=client(config.consumer_key, config.consumer_secret)
+-- First get a request token and declare our callback url
+get_request_token(c, 'http://www.example.org/mywebapp')
+-- TODO: Store c.req_token and c.req_secret somewhere
+local url = get_authorize_url(c)
+-- TODO: Redirect user to url
+```
+
+After authorization is complete, the user will be redirected to
+`http://www.example.org/mywebapp?oauth_token=...&oauth_verifier=...`
+
+This request should be handled as follows:
+
+```lua
+require("bbl-twitter")
+c=client(config.consumer_key, config.consumer_secret)
+
+-- TODO: get oauth_verifier from the url
+local verifier = ...
+-- TODO: get oauth_token from the url
+c.req_token = ...
+-- TODO: compare req_token with stored req_token
+-- TODO: get stored req_secret
+c.req_secret = ...
+
+-- Now, trade the verifier for an access token
+get_access_token(c, verifier)
+
+update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+print(string.format("My secrets are token_key '%s' token_secret '%s'",
 								c.token_key, c.token_secret))
 ```
 
 ### Provide bbl-twitter options in a global 'twitter_config' table
+
 ```lua
 require("bbl-twitter")
 twitter_config.openssl = "/opt/bin/openssl" -- if your openssl is not on the PATH
