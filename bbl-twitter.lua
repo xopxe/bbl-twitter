@@ -113,7 +113,7 @@ end
 function get_authorize_url(client)
 	assert(client.req_token and client.req_secret, "Cannot authorize request token when there is none")
 	-- The user should visit this url to authorize the token
-	return "http://twitter.com/oauth/authorize?oauth_token=" .. client.req_token
+	return "http://twitter.com/oauth/authorize?" .. join_http_args({oauth_token = client.req_token})
 end
 
 function out_of_band_cli(client)
