@@ -11,6 +11,10 @@ It is intended for thin/embedded platforms like OpenWRT routers.
 * shell w/ echo support (ie nearly any shell)
 * an openssl executable binary.
 
++ On OpenWRT, packages required are openssl-util, lua, luasocket
++ On Debian/Ubuntu, packages required are openssl, lua, liblua5.1-socket2
++ Other OSes will be similar. :)
+
 ## License
 
 MIT Licensed as per the LICENSE file.
