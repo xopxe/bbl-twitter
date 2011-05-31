@@ -160,6 +160,7 @@ function get_access_token(client, verifier)
 end
 
 function update_status(client, tweet)
+   assert(client.token_secret, "Cannot post tweet without token_secret")
 	local args = get_base_args(client)
 	args.status = tweet
 	return http_post(client, "http://api.twitter.com/1/statuses/update.xml", args)
