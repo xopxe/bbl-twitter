@@ -18,7 +18,8 @@ MIT Licensed as per the LICENSE file.
 ## Examples
 
 ### Tweet from a client (known preset consumer & request secrets)
-(If it's your app then you can authenticate yourself for a developer/hardcoded request secret at dev.twitter.com)
+(If it's your app then you can authenticate yourself for a developer/hardcoded request secret via http://dev.twitter.com)
+
 ```lua
 require("bbl-twitter")
 c=client(config.consumer_key, config.consumer_secret, config.request_token, config.request_secret)
@@ -53,7 +54,7 @@ print(string.format("My secrets are request_token '%s' request_secret '%s'",
 ### Provide bbl-twitter options in a global 'twitter_config' table
 ```lua
 require("bbl-twitter")
-twitter_config.openssl = "/opt/bin/openssl" -- for openssl not on PATH
+twitter_config.openssl = "/opt/bin/openssl" -- if your openssl is not on the PATH
 twitter_config.consumer_key = "myconsumerkey"
 twitter_config.consumer_secret = "myconsumersecret"
 twitter_config.token_key = "myrequesttoken"
