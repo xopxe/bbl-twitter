@@ -67,10 +67,14 @@ update_status(c, "Look ma, tweets from Lua!")
 
 ### Tweet w/ error handling
 
+Errors thrown in the various functions can be handled using the `pcall`
+function. This example shows how to handle errors in update_status, but
+it applies to all other functions as well.
+
 ```lua
 require("bbl-twitter")
 c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
-local r, e = update_status(c, "Look ma, this tweet might not make it!")
+local r, e = pcall(update_status, c, "Look ma, this tweet might not make it!")
 if (not r) then
   if string.match(e, "duplicate") then
     print("Best guess is this tweet was rejected as a duplicate. Did you already tweet this?")

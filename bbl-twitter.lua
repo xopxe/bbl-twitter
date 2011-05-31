@@ -177,7 +177,8 @@ function update_status(client, tweet)
    assert(client.token_secret, "Cannot post tweet without token_secret")
 	local args = get_base_args(client)
 	args.status = tweet
-	return http_post(client, twitter_config.url .. "/1/statuses/update.xml", args)
+	local r, e = http_post(client, twitter_config.url .. "/1/statuses/update.xml", args)
+	assert(r, "Unable to post tweet: " .. e)
 end
 
 
