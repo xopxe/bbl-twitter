@@ -87,27 +87,66 @@ local function get_base_args(client)
 				}
 end
 
--- Interact w/ the user to get us an access token & secret for the client, if not supplied
-local function get_access_token(client)
+-- Get a request token and secret
+-- Token is stored in client.req_token and client.req_secret.
+function get_request_token(client)
 	r, e = http_get( client, "http://twitter.com/oauth/request_token", get_base_args(client))
 	assert(r, "Could not get OAuth request token: " .. e)
 	
-	local req_token = string.match(r, "oauth_token=([^&]*)")
-	local req_secret = string.match(r, "oauth_token_secret=([^&]*)")
+	client.req_token = string.match(r, "oauth_token=([^&]*)")
+	client.req_secret = string.match(r, "oauth_token_secret=([^&]*)")
+
+	return client
+end
+
+-- Get the url the user should navigate to to authorize the request
+-- token.
+function get_authorize_url(client)
+	assert(client.req_token and client.req_secret, "Cannot authorize request token when there is none")
+	-- The user should visit this url to authorize the token
+	return "http://twitter.com/oauth/authorize?oauth_token=" .. client.req_token
+end
+
+function out_of_band_cli(client)
+	-- Request a token
+	get_request_token(client)
+
+	-- Get the url to authorize it
+	local url = get_authorize_url(client)
 
 	print("Open this URL in your browser and enter back the PIN")
-	print("http://twitter.com/oauth/authorize?oauth_token=" .. req_token)
+	print(url)
 	io.write("pin >")
 	local req_pin = io.read("*line")
 
+	get_access_token(client, req_pin)
+end
+
+-- Get an access token after obtaining user authorization for a request
+-- token. The verifier is either the "oauth_verifier" parameter passed
+-- to the callback, or the pin entered by the user.
+--
+-- To be able to use this function, you should make sure that both the
+-- client.req_token and client.req_secret are present (and match the
+-- request token the verifier is for).
+--
+-- The obtained access token is stored inside the client, which can be
+-- used to make authenticated request afterwards. To preserve the
+-- authentication for a longer period of time, store the
+-- client.token_key and client.token_secret in persistent storage.
+function get_access_token(client, verifier)
+	assert(client.req_token, "Can't get access token without request token")
+
 	args = get_base_args(client)
-	args.oauth_token=req_token
-	args.oauth_verifier=req_pin
+	args.oauth_token=client.req_token
+	args.oauth_verifier=verifier
 	r, e = http_get( client, "http://twitter.com/oauth/access_token", args)
 	assert(r, "Unable to get access token: " .. e)
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
 	client.token_secret = string.match(r, "oauth_token_secret=([^&]*)")
+	--print("key = " .. client.token_key)
+	--print("secret = " .. client.token_secret)
 	return client
 end
 
@@ -129,7 +168,7 @@ function client(consumer_key, consumer_secret, token_key, token_secret, verifier
 
 	assert(client.consumer_key and client.consumer_secret, "you need to specify a consumer key and a consumer secret!")
 	if not (client.token_key and client.token_secret) then
-		get_access_token(client)
+		out_of_band_cli(client)
 	end
 	return client
 end
