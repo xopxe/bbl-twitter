@@ -11,6 +11,10 @@ local http = require("socket.http")
 -- Configuration elements for twitter client
 twitter_config = {
 	openssl = "openssl",
+	-- Resist the temptation of changing this into https since
+	-- socket.http does not support https (and silently ignores whatever
+	-- scheme you put in the url, using HTTP, breaking the signature). At
+	-- least version 2.0.2 does.
 	url = "http://api.twitter.com",
 }
 
