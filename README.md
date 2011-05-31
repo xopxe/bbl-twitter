@@ -91,8 +91,8 @@ c=client(config.consumer_key, config.consumer_secret)
 -- enter a PIN for out-of-band authentication
 out_of_band_cli(c)
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
-print(string.format("My secrets are token_key '%s' token_secret '%s'",
-                    c.token_key, c.token_secret))
+print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
+                    c.screen_name, c.token_key, c.token_secret))
 ```
 
 ### Authenticate Out-Of-Band to Twitter using other I/O
@@ -114,8 +114,8 @@ local pin = ...
 get_access_token(c, pin)
 
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
-print(string.format("My secrets are token_key '%s' token_secret '%s'",
-                    c.token_key, c.token_secret))
+print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
+                    c.screen_name, c.token_key, c.token_secret))
 ```
 
 ### Authenticate using a callback
@@ -155,8 +155,8 @@ c.req_secret = ...
 get_access_token(c, verifier)
 
 update_status(c, "Look ma, I just authenticated my Lua twitter app!")
-print(string.format("My secrets are token_key '%s' token_secret '%s'",
-								c.token_key, c.token_secret))
+print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
+                    c.screen_name, c.token_key, c.token_secret))
 ```
 
 ### Provide bbl-twitter options in a global 'twitter_config' table

@@ -143,6 +143,9 @@ end
 -- used to make authenticated request afterwards. To preserve the
 -- authentication for a longer period of time, store the
 -- client.token_key and client.token_secret in persistent storage.
+-- Also, after obtaining an access token, client.user_id and
+-- client.screen_name contain the user_id (numerical) and screen_name
+-- (username) of the authorizing user.
 function get_access_token(client, verifier)
 	assert(client.req_token and client.req_secret, "Can't get access token without request token")
 	-- Sign the access_token request using the request token. Note that
@@ -162,6 +165,8 @@ function get_access_token(client, verifier)
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
 	client.token_secret = string.match(r, "oauth_token_secret=([^&]*)")
+	client.screen_name = string.match(r, "screen_name=([^&]*)")
+	client.user_id = string.match(r, "userid=([^&]*)")
 	--print("key = " .. client.token_key)
 	--print("secret = " .. client.token_secret)
 	return client
