@@ -1,32 +1,11 @@
 -- bbl-twitter "Barebones Lua Twitter"
 --
--- An OAuth-enabled Lua twitter client with _no dependencies_ 
--- apart from luasocket, openssl.
+-- Copyright (c) 2011 Angus Gratton, released under the MIT License
+-- (see the included file LICENSE.)
 --
--- For very thin platforms like embedded systems
+-- See the README.md file for details or visit http://github.com/projectgus/bbl-twitter
 --
--- Requirements: luasocket, shell w/ echo support (ie most any shell) & openssl 
--- (on the path, or with path set at twitter_config.openssl property.)
---
--- Inspired by "shtter" shell twitter client for OpenWRT, by "lostman"
--- http://lostman-worlds-end.blogspot.com/2010/05/openwrt_22.html
--- (lostman's is better if you want command-line tweeting on a severe budget!)
---
--- If you have easy access to luarocks + working C compiler then a better option is
--- ltwitter - https://github.com/TheLinx/ltwitter
---
---
--- Example code
---
--- c=client(<My consumer key>, <My consumer secret>)
--- update_status(c, "My awesome new tweet!")
---
--- The client step in the example will prompt you to verify a PIN. 
--- If you don't want to authorise it interactively, supply request_token/request_secret
--- as additional params to client() or assign them to twitter_config
---
--- TODO: make less bodgy. :)
-
+ 
 local http = require("socket.http")
 
 -- Configuration elements for twitter client
@@ -61,10 +40,8 @@ local function sign_http_args(client, method, url, args)
 end
 
 function cmd_output(cmd)
-	--print("Running " .. cmd)
 	local f = assert(io.popen(cmd, 'r'))
 	local res = assert(f:read('*a'))
-	--print ("Got back " .. res)
 	f:close()
 	return res
 end
@@ -131,8 +108,6 @@ local function get_access_token(client)
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
 	client.token_secret = string.match(r, "oauth_token_secret=([^&]*)")
-	--print("key = " .. client.token_key)
-	--print("secret = " .. client.token_secret)
 	return client
 end
 
@@ -154,7 +129,7 @@ function client(consumer_key, consumer_secret, token_key, token_secret, verifier
 
 	assert(client.consumer_key and client.consumer_secret, "you need to specify a consumer key and a consumer secret!")
 	if not (client.token_key and client.token_secret) then
-		get_access_token(client)
+		get_acce<ss_token(client)
 	end
 	return client
 end
@@ -196,7 +171,6 @@ function orderedNext(t, state)
     -- order. We use a temporary ordered key table that is stored in the
     -- table being iterated.
 
-    --print("orderedNext: state = "..tostring(state) )
     if state == nil then
         -- the first time, generate the index
         t.__orderedIndex = __genOrderedIndex( t )
