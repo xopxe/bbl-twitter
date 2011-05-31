@@ -88,9 +88,18 @@ local function get_base_args(client)
 end
 
 -- Get a request token and secret
+--
+-- callback is the url passed to Twitter where the user is
+-- redirected back to after authorizing. If this is not a webapp and/or you
+-- need to use out-of-band authorization, pass "oob" as the callback
+-- (the user will then be presented a pincode that should be entered
+-- back into the application).
+--
 -- Token is stored in client.req_token and client.req_secret.
-function get_request_token(client)
-	r, e = http_get( client, "http://twitter.com/oauth/request_token", get_base_args(client))
+function get_request_token(client, callback)
+	args = get_base_args(client)
+	args.oauth_callback = callback
+	r, e = http_get( client, "http://twitter.com/oauth/request_token", args)
 	assert(r, "Could not get OAuth request token: " .. e)
 	
 	client.req_token = string.match(r, "oauth_token=([^&]*)")
@@ -109,7 +118,7 @@ end
 
 function out_of_band_cli(client)
 	-- Request a token
-	get_request_token(client)
+	get_request_token(client, 'oob')
 
 	-- Get the url to authorize it
 	local url = get_authorize_url(client)
