@@ -70,12 +70,18 @@ update_status(client(), "Look ma, global settings!")
 
 ## Alternatives
 
-This is inspired by "shtter" shell twitter client for OpenWRT, by "lostman"
-http://lostman-worlds-end.blogspot.com/2010/05/openwrt_22.html
-(lostman's is better if you want command-line tweeting on a very severe budget!)
+Jeffrey Friedl has actually coded a pure Lua Twitter module right down
+to SHA1 & HMAC-SHA1 implementations, which is quite impressive (if a
+bit absurd!) If I'd seen this earlier I probably wouldn't have
+bothered with bbl-twitter at all! http://regex.info/blog/lua/twitter
+
+bbl-twitter was inspired by "shtter" shell twitter client for OpenWRT,
+by "lostman" http://lostman-worlds-end.blogspot.com/2010/05/openwrt_22.html
+(lostman's is better if you want command-line tweeting on a very
+severe budget!)
 
 If you have easy access to luarocks + working C compiler then a better
-fully-featured option is ltwitter - https://github.com/TheLinx/ltwitter
+fully-featured option may be ltwitter - https://github.com/TheLinx/ltwitter
 
 ## Todo
 
