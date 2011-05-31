@@ -11,6 +11,7 @@ local http = require("socket.http")
 -- Configuration elements for twitter client
 twitter_config = {
 	openssl = "openssl",
+	url = "http://api.twitter.com",
 }
 
 local function join_http_args(args)
@@ -99,7 +100,7 @@ end
 function get_request_token(client, callback)
 	args = get_base_args(client)
 	args.oauth_callback = callback
-	r, e = http_get( client, "http://twitter.com/oauth/request_token", args)
+	r, e = http_get( client, twitter_config.url .. "/oauth/request_token", args)
 	assert(r, "Could not get OAuth request token: " .. e)
 	
 	client.req_token = string.match(r, "oauth_token=([^&]*)")
@@ -113,7 +114,7 @@ end
 function get_authorize_url(client)
 	assert(client.req_token and client.req_secret, "Cannot authorize request token when there is none")
 	-- The user should visit this url to authorize the token
-	return "http://twitter.com/oauth/authorize?" .. join_http_args({oauth_token = client.req_token})
+	return twitter_config.url .. "/oauth/authorize?" .. join_http_args({oauth_token = client.req_token})
 end
 
 function out_of_band_cli(client)
@@ -160,7 +161,7 @@ function get_access_token(client, verifier)
 	args = get_base_args(client)
 	args.oauth_token=client.req_token
 	args.oauth_verifier=verifier
-	r, e = http_get( client, "http://twitter.com/oauth/access_token", args)
+	r, e = http_get( client, twitter_config.url .. "/oauth/access_token", args)
 	assert(r, "Unable to get access token: " .. e)
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
@@ -176,7 +177,7 @@ function update_status(client, tweet)
    assert(client.token_secret, "Cannot post tweet without token_secret")
 	local args = get_base_args(client)
 	args.status = tweet
-	return http_post(client, "http://api.twitter.com/1/statuses/update.xml", args)
+	return http_post(client, twitter_config.url .. "/1/statuses/update.xml", args)
 end
 
 
