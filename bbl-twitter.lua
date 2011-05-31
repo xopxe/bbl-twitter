@@ -5,7 +5,7 @@
 --
 -- See the README.md file for details or visit http://github.com/projectgus/bbl-twitter
 --
- 
+
 local http = require("socket.http")
 
 -- Configuration elements for twitter client
@@ -18,7 +18,7 @@ local function join_http_args(args)
 	local res = ""
 	local ampersand
 
-	for a,v in orderedPairs(args or {}) do 
+	for a,v in orderedPairs(args or {}) do
 		if not first then
 			res = res .. "&"
 		end
@@ -30,8 +30,8 @@ end
 
 local function sign_http_args(client, method, url, args)
 	local query = string.format("%s&%s&%s", method, url_encode(url), url_encode(join_http_args(args)))		
-	local cmd = string.format("echo -n \"%s\" | %s sha1 -hmac \"%s&%s\" -binary | %s base64", 
-				 						 query, twitter_config.openssl, 
+	local cmd = string.format("echo -n \"%s\" | %s sha1 -hmac \"%s&%s\" -binary | %s base64",
+				 						 query, twitter_config.openssl,
 										 client.consumer_secret, client.token_secret or "",
 										 twitter_config.openssl)
 	local hash = cmd_output(cmd)
@@ -49,7 +49,7 @@ end
 local function http_get(client, url, args)
 	local argdata = sign_http_args(client, "GET", url, args)
  	if not string.find(url, "?") then
-		url = url .. "?" 
+		url = url .. "?"
 	end
 	local b, c = http.request(url .. argdata)
 	if b and (c ~= 200) then
@@ -83,7 +83,7 @@ local function get_base_args(client)
 					oauth_signature_method="HMAC-SHA1",
 					oauth_timestamp=os.time(),
 					oauth_token=client.token_key,
-					oauth_version="1.0" 
+					oauth_version="1.0"
 				}
 end
 
@@ -165,13 +165,13 @@ function update_status(client, tweet)
 	args.status = tweet
 	return http_post(client, "http://api.twitter.com/1/statuses/update.xml", args)
 end
-							  
+
 
 function client(consumer_key, consumer_secret, token_key, token_secret, verifier)
 	local client = {}
 	for j,x in pairs(twitter_config) do client[j] = x end
 	-- args can be set in twitter_config if you want them global
-	client.consumer_key = consumer_key or client.consumer_key 
+	client.consumer_key = consumer_key or client.consumer_key
 	client.consumer_secret = consumer_secret or client.consumer_secret
 	client.token_key = token_key or client.token_key
 	client.token_secret = token_secret or client.token_secret
