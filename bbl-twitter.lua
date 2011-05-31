@@ -144,7 +144,15 @@ end
 -- authentication for a longer period of time, store the
 -- client.token_key and client.token_secret in persistent storage.
 function get_access_token(client, verifier)
-	assert(client.req_token, "Can't get access token without request token")
+	assert(client.req_token and client.req_secret, "Can't get access token without request token")
+	-- Sign the access_token request using the request token. Note that
+	-- Twitter does not currently require this, it seems to ignore the
+	-- signature on access_token requests alltogether (which is in
+	-- violation with the OAuth spec and their own documentation). To
+	-- prevent making this code a bad example and problems when Twitter
+	-- ever becomes compliant, we'll do this the proper way.
+	client.token_key = client.req_token
+	client.token_secret = client.req_secret
 
 	args = get_base_args(client)
 	args.oauth_token=client.req_token
