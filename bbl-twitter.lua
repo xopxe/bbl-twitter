@@ -199,3 +199,5 @@ function orderedPairs(t)
     -- in order
     return orderedNext, t, nil
 end
+
+-- vim: set ts=3 sts=3 sw=3 noexpandtab:
