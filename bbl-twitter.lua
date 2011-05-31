@@ -129,7 +129,7 @@ function client(consumer_key, consumer_secret, token_key, token_secret, verifier
 
 	assert(client.consumer_key and client.consumer_secret, "you need to specify a consumer key and a consumer secret!")
 	if not (client.token_key and client.token_secret) then
-		get_acce<ss_token(client)
+		get_access_token(client)
 	end
 	return client
 end
