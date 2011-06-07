@@ -82,14 +82,17 @@ local function generate_nonce()
 	return src
 end
 
-local function get_base_args(client)
-	return { 	oauth_consumer_key=client.consumer_key,
-					oauth_nonce=generate_nonce(),
-					oauth_signature_method="HMAC-SHA1",
-					oauth_timestamp=os.time(),
-					oauth_token=client.token_key,
-					oauth_version="1.0"
-				}
+local function get_base_args(client, args)
+	args = args or {}
+
+	args.oauth_consumer_key=client.consumer_key
+	args.oauth_nonce=generate_nonce()
+	args.oauth_signature_method="HMAC-SHA1"
+	args.oauth_timestamp=os.time()
+	args.oauth_token=client.token_key
+	args.oauth_version="1.0"
+
+	return args
 end
 
 -- Get a request token and secret
@@ -162,11 +165,12 @@ function get_access_token(client, verifier)
 	client.token_key = client.req_token
 	client.token_secret = client.req_secret
 
-	args = get_base_args(client)
-	args.oauth_token=client.req_token
-	args.oauth_verifier=verifier
-	r, e = http_get( client, twitter_config.url .. "/oauth/access_token", args)
-	assert(r, "Unable to get access token: " .. e)
+	args = {
+		oauth_token=client.req_token,
+		oauth_verifier=verifier
+	}
+	s, r = pcall(signed_request, client, "/oauth/access_token", args, "GET")
+	assert(s, "Unable to get access token: " .. r)
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
 	client.token_secret = string.match(r, "oauth_token_secret=([^&]*)")
@@ -177,14 +181,41 @@ function get_access_token(client, verifier)
 	return client
 end
 
-function update_status(client, tweet)
-   assert(client.token_secret, "Cannot post tweet without token_secret")
-	local args = get_base_args(client)
-	args.status = tweet
-	local r, e = http_post(client, twitter_config.url .. "/1/statuses/update.xml", args)
-	assert(r, "Unable to post tweet: " .. e)
+--
+-- Perform a signed (authenticated) request to the twitter API. If the
+-- url starts with /, the Twitter API base url (twitter_config.url) is
+-- automatically prepended.
+--
+-- method can be "GET" or "POST". When no method is specified, a POST
+-- request is made.
+--
+-- Returns the response body when the request was succesful. Raises an
+-- error when the request fails for whatever reason.
+function signed_request(client, url, args, method)
+   assert(client.token_secret, "Cannot perform signed request without token_secret")
+
+	method = method or "POST"
+	args = args or {}
+
+	if (string.sub(url, 1, 1) == "/") then
+		url = twitter_config.url .. url
+	end
+
+	args = get_base_args(client, args)
+	local r, e
+	if (method == "GET") then
+		r, e = http_get(client, url, args)
+	else
+		r, e = http_post(client, url, args)
+	end
+	assert(r, "Unable to perform signed request: " .. e)
+
+	return r
 end
 
+function update_status(client, tweet)
+	signed_request(client, "/1/statuses/update.xml", {status = tweet})
+end
 
 function client(consumer_key, consumer_secret, token_key, token_secret, verifier)
 	local client = {}
