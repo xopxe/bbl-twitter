@@ -163,6 +163,21 @@ print(string.format("Authorized by user '%s'. My secrets are token_key '%s' toke
                     c.screen_name, c.token_key, c.token_secret))
 ```
 
+### Perform custom signed requests
+The `signed_request` function can be used to perform other requests to the
+Twitter API that require authorization. This example shows how you would
+implement posting a new tweet if the `update_status` function would not
+exist.
+
+This assumes you already have an access token, obtained by any method
+described above.
+
+```lua
+require("bbl-twitter")
+c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
+signed_request(c, "/1/statuses/update.xml", {status = "Look ma, tweets from Lua!"}, "POST")
+```
+
 ### Provide bbl-twitter options in a global 'twitter_config' table
 
 ```lua
