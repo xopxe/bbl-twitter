@@ -58,7 +58,7 @@ local function http_get(client, url, args)
 	end
 	local b, c = http.request(url .. argdata)
 	if b and (c ~= 200) then
-		return nil, b .. ("Error " .. c)
+		return nil, "Error " .. c .. ": " .. b
 	else
 		return b, c
 	end
@@ -67,7 +67,7 @@ end
 local function http_post(client, url, postargs)
 	local b, c = http.request(url, sign_http_args(client, "POST", url, postargs))								
 	if b and (c ~= 200) then
-		return nil, b .. ("Error " .. c)
+		return nil, "Error " .. c .. ": " .. b
 	else
 		return b, c
 	end
