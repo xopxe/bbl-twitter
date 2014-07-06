@@ -4,6 +4,36 @@
 
 It is intended for thin/embedded platforms like OpenWRT routers.
 
+!!!!!!!!!!!!!!!!!
+This is a fork of https://github.com/projectgus/bbl-twitter . There are two main changes:
+
+1. The module is returned as a table, with no global pollution
+2. Made twitter api version 1.1 compatible:
+	* Some URL changed
+	* Moved to use https (ads dependecy on LuaSec) 
+
+An example program now is as follows:
+
+```lua
+local bbl = require("bbl-twitter")  
+local config = {  
+  consumer_key = 'xxx',   
+  consumer_secret = 'xxx',  
+}  
+local c = bbl.client(config.consumer_key, config.consumer_secret)  
+-- The following function will prompt on the console to visit a URL and  
+-- enter a PIN for out-of-band authentication  
+bbl.out_of_band_cli(c)  
+  
+bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")  
+print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",  
+  c.screen_name, c.token_key, c.token_secret))  
+```
+
+xxopxe@gmail.com
+!!!!!!!!!!!!!!!!!
+
+
 ## Dependencies
 
 * Lua (5.1 assumed)
