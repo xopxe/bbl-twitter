@@ -9,8 +9,8 @@
 -- adapted by xxopxe@gmail.com
 --   * table as module.
 --   * twitter api 1.1
---      * some url changed
---      * moved to https (added dependency on luasec)
+--		  * some url changed
+--		  * moved to https (added dependency on luasec)
 
 local http = require("socket.http")
 local https = require("ssl.https")
@@ -23,59 +23,59 @@ local M = {}
 
 -- Taken from http://lua-users.org/wiki/StringRecipes then modified for RFC3986
 local function url_encode(str)
-  if (str) then
-	  str = string.gsub(str, "([^%w-._~])", function (c) 
-      return string.format ("%%%02X", string.byte(c)) 
-    end)
-  end
-  return str	
+	if (str) then
+		str = string.gsub(str, "([^%w-._~])", function (c)
+			return string.format ("%%%02X", string.byte(c))
+		end)
+	end
+	return str
 end
 
 
 --  taken from http://lua-users.org/wiki/SortedIteration
 
 local function __genOrderedIndex( t )
-    local orderedIndex = {}
-    for key in pairs(t) do
-        table.insert( orderedIndex, key )
-    end
-    table.sort( orderedIndex )
-    return orderedIndex
+	local orderedIndex = {}
+	for key in pairs(t) do
+		table.insert( orderedIndex, key )
+	end
+	table.sort( orderedIndex )
+	return orderedIndex
 end
 
 local function orderedNext(t, state)
-    -- Equivalent of the next function, but returns the keys in the alphabetic
-    -- order. We use a temporary ordered key table that is stored in the
-    -- table being iterated.
-    
-    local key
-    if state == nil then
-        -- the first time, generate the index
-        t.__orderedIndex = __genOrderedIndex( t )
-        key = t.__orderedIndex[1]
-        return key, t[key]
-    end
-    -- fetch the next value
-    key = nil
-    for i = 1,table.getn(t.__orderedIndex) do
-        if t.__orderedIndex[i] == state then
-            key = t.__orderedIndex[i+1]
-        end
-    end
+	-- Equivalent of the next function, but returns the keys in the alphabetic
+	-- order. We use a temporary ordered key table that is stored in the
+	-- table being iterated.
+	
+	local key
+	if state == nil then
+		-- the first time, generate the index
+		t.__orderedIndex = __genOrderedIndex( t )
+		key = t.__orderedIndex[1]
+		return key, t[key]
+	end
+	-- fetch the next value
+	key = nil
+	for i = 1,table.getn(t.__orderedIndex) do
+		if t.__orderedIndex[i] == state then
+			key = t.__orderedIndex[i+1]
+		end
+	end
 
-    if key then
-        return key, t[key]
-    end
+	if key then
+		return key, t[key]
+	end
 
-    -- no more value to return, cleanup
-    t.__orderedIndex = nil
-    return
+	-- no more value to return, cleanup
+	t.__orderedIndex = nil
+	return
 end
 
 local function orderedPairs(t)
-    -- Equivalent of the pairs() function on tables. Allows to iterate
-    -- in order
-    return orderedNext, t, nil
+	-- Equivalent of the pairs() function on tables. Allows to iterate
+	-- in order
+	return orderedNext, t, nil
 end
 
 -------------------
@@ -111,10 +111,12 @@ end
 
 local function sign_http_args(client, method, url, args)
 	local query = string.format("%s&%s&%s", method, url_encode(url), url_encode(join_http_args(args)))		
-	local cmd = string.format("echo -n \"%s\" | %s sha1 -hmac \"%s&%s\" -binary | %s base64",
-				 						 query, M.twitter_config.openssl,
-										 client.consumer_secret, client.token_secret or "",
-										 M.twitter_config.openssl)
+	local cmd = string.format(
+		"echo -n \"%s\" | %s sha1 -hmac \"%s&%s\" -binary | %s base64",
+		query, M.twitter_config.openssl,
+		client.consumer_secret, client.token_secret or "",
+		M.twitter_config.openssl
+	)
 	local hash = cmd_output(cmd)
 	hash = string.gsub(hash, "\n", "")
 	return join_http_args(args) .. "&oauth_signature=" .. url_encode(hash)
@@ -126,7 +128,7 @@ local function https_get(client, url, args)
  	if not string.find(url, "?") then
 		url = url .. "?"
 	end
-	local b, c = assert(https.request(url .. argdata))
+	local b, c = https.request(url .. argdata)
 	if b and (c ~= 200) then
 		return nil, "Error " .. c .. ": " .. b
 	else
@@ -178,7 +180,7 @@ function M.get_request_token(client, callback)
 	local args = get_base_args(client)
 	args.oauth_callback = callback
 	local r, e = https_get( client, M.twitter_config.url .. "/oauth/request_token", args)
-	assert(r, "Could not get OAuth request token: " .. e)
+  if not r then return nil, "Could not get OAuth request token: " .. tostring(e) end
 	
 	client.req_token = string.match(r, "oauth_token=([^&]*)")
 	client.req_secret = string.match(r, "oauth_token_secret=([^&]*)")
@@ -189,7 +191,9 @@ end
 -- Get the url the user should navigate to to authorize the request
 -- token.
 function M.get_authorize_url(client)
-	assert(client.req_token and client.req_secret, "Cannot authorize request token when there is none")
+	if not (client.req_token and client.req_secret) then
+	return nil,  "Cannot authorize request token when there is none"
+  end
 	-- The user should visit this url to authorize the token
 	return M.twitter_config.url .. "/oauth/authorize?" .. join_http_args({oauth_token = client.req_token})
 end
@@ -225,7 +229,9 @@ end
 -- client.screen_name contain the user_id (numerical) and screen_name
 -- (username) of the authorizing user.
 function M.get_access_token(client, verifier)
-	assert(client.req_token and client.req_secret, "Can't get access token without request token")
+	if not (client.req_token and client.req_secret) then
+		return nil, "Can't get access token without request token"
+	end
 	-- Sign the access_token request using the request token. Note that
 	-- Twitter does not currently require this, it seems to ignore the
 	-- signature on access_token requests alltogether (which is in
@@ -239,8 +245,10 @@ function M.get_access_token(client, verifier)
 		oauth_token=client.req_token,
 		oauth_verifier=verifier
 	}
-	s, r = pcall(M.signed_request, client, "/oauth/access_token", args, "GET")
-	assert(s, "Unable to get access token: " .. r)
+	local s, r = pcall(M.signed_request, client, "/oauth/access_token", args, "GET")
+	if not s then
+		return nil, "Unable to get access token: " .. tostring(r)
+	end
 
 	client.token_key = string.match(r, "oauth_token=([^&]*)")
 	client.token_secret = string.match(r, "oauth_token_secret=([^&]*)")
@@ -262,11 +270,10 @@ end
 -- Returns the response body when the request was succesful. Raises an
 -- error when the request fails for whatever reason.
 function M.signed_request(client, url, args, method)
-  assert(client.token_secret, "Cannot perform signed request without token_secret")
+	if not client.token_secret then
+		return nil, "Cannot perform signed request without token_secret"
+	end
   
-  print ('--->', method, url)
-
-
 	method = method or "POST"
 	args = args or {}
 
@@ -281,13 +288,14 @@ function M.signed_request(client, url, args, method)
 	else
 		r, e = https_post(client, url, args)
 	end
-	assert(r, "Unable to perform signed request: " .. e)
-
+	if not r then
+		return nil, "Unable to perform signed request: " .. tostring(e)
+	end
 	return r
 end
 
 function M.update_status(client, tweet)
-	M.signed_request(client, "/1.1/statuses/update.json", {status = tweet})
+	return M.signed_request(client, "/1.1/statuses/update.json", {status = tweet})
 end
 
 function M.client(consumer_key, consumer_secret, token_key, token_secret, verifier)
@@ -299,9 +307,14 @@ function M.client(consumer_key, consumer_secret, token_key, token_secret, verifi
 	client.token_key = token_key or client.token_key
 	client.token_secret = token_secret or client.token_secret
 
-	assert(client.consumer_key and client.consumer_secret, "you need to specify a consumer key and a consumer secret!")
+	if not (client.consumer_key and client.consumer_secret) then
+		return nil, "you need to specify a consumer key and a consumer secret!"
+	end
+	
+	setmetatable(client, {__index=M})
 	return client
 end
+
 return M
 
 -- vim: set ts=3 sts=3 sw=3 noexpandtab:
