@@ -4,36 +4,23 @@
 
 It is intended for thin/embedded platforms like OpenWRT routers.
 
-!!!!!!!!!!!!!!!!!
-
-This is a fork of https://github.com/projectgus/bbl-twitter . There are two main changes:
-
-1. The module is returned as a table, with no global pollution
-2. Made twitter api version 1.1 compatible:
-	* Some URL changed
-	* Moved to use https (ads dependecy on LuaSec) 
-
-An example program now is as follows:
+Here's an example program:
 
 ```lua
-local bbl = require("bbl-twitter")  
-local config = {  
-  consumer_key = 'xxx',   
-  consumer_secret = 'xxx',  
-}  
-local c = bbl.client(config.consumer_key, config.consumer_secret)  
--- The following function will prompt on the console to visit a URL and  
--- enter a PIN for out-of-band authentication  
-bbl.out_of_band_cli(c)  
-  
-bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")  
-print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",  
-  c.screen_name, c.token_key, c.token_secret))  
+local bbl = require("bbl-twitter")
+local config = {
+  consumer_key = 'xxx',
+  consumer_secret = 'xxx',
+}
+local c = bbl.client(config.consumer_key, config.consumer_secret)
+-- The following function will prompt on the console to visit a URL and
+-- enter a PIN for out-of-band authentication
+bbl.out_of_band_cli(c)
+
+bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
+  c.screen_name, c.token_key, c.token_secret))
 ```
-
-xxopxe@gmail.com
-
-!!!!!!!!!!!!!!!!!
 
 
 ## Dependencies
@@ -51,6 +38,14 @@ xxopxe@gmail.com
 ## License
 
 MIT Licensed as per the LICENSE file.
+
+## Authors
+
+Originally by Angus Gratton (@projectgus), improved and now maintained by @xopxe.
+
+Significant contributions by:
+* Matthijs Kooijman @matthijskooijman
+* (Your Name Here!)
 
 ## Overview
 
@@ -92,9 +87,9 @@ This assumes you already have an access token, obtained by any method
 described above.
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
-update_status(c, "Look ma, tweets from Lua!")
+local bbl = require("bbl-twitter")
+local c = client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
+bbl.update_status(c, "Look ma, tweets from Lua!")
 ```
 
 ### Tweet w/ error handling
@@ -104,9 +99,13 @@ function. This example shows how to handle errors in update_status, but
 it applies to all other functions as well.
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
-local r, e = pcall(update_status, c, "Look ma, this tweet might not make it!")
+local bbl = require("bbl-twitter")
+local config = {
+  consumer_key = 'xxx',
+  consumer_secret = 'xxx',
+}
+local c = bbl.client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
+local r, e = pcall(bbl.update_status, c, "Look ma, this tweet might not make it!")
 if (not r) then
   if string.match(e, "duplicate") then
     print("Best guess is this tweet was rejected as a duplicate. Did you already tweet this?")
@@ -121,14 +120,19 @@ This example uses the `out_of_band_cli` function, which handles prompting
 the user with the authorization url and prompting for the pin code.
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret)
+local bbl = require("bbl-twitter")
+local config = {
+  consumer_key = 'xxx',
+  consumer_secret = 'xxx',
+}
+local c = bbl.client(config.consumer_key, config.consumer_secret)
 -- The following function will prompt on the console to visit a URL and
 -- enter a PIN for out-of-band authentication
-out_of_band_cli(c)
-update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+bbl.out_of_band_cli(c)
+
+bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")
 print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
-                    c.screen_name, c.token_key, c.token_secret))
+  c.screen_name, c.token_key, c.token_secret))
 ```
 
 ### Authenticate Out-Of-Band to Twitter using other I/O
@@ -137,19 +141,19 @@ This example shows the details of doing out-of-band authorization
 it work, of course).
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret)
+local bbl = require("bbl-twitter")
+local c = bbl.client(config.consumer_key, config.consumer_secret)
 -- First get a request token and declare we need to do out-of-band
 -- authorization
-get_request_token(c, 'oob')
-local url = get_authorize_url(c)
+bbl.get_request_token(c, 'oob')
+local url = bbl.get_authorize_url(c)
 -- TODO: Show the url to the user
 -- TODO: obtain pin from the user
 local pin = ...
 -- Now, trade the pin for an access token
-get_access_token(c, pin)
+bbl.get_access_token(c, pin)
 
-update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")
 print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
                     c.screen_name, c.token_key, c.token_secret))
 ```
@@ -161,10 +165,10 @@ callback. Again, fill in the TODOs for your webapp.
 In the first request, you do:
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret)
+local bbl = require("bbl-twitter")
+local c = bbl.client(config.consumer_key, config.consumer_secret)
 -- First get a request token and declare our callback url
-get_request_token(c, 'http://www.example.org/mywebapp')
+bbl.get_request_token(c, 'http://www.example.org/mywebapp')
 -- TODO: Store c.req_token and c.req_secret somewhere
 local url = get_authorize_url(c)
 -- TODO: Redirect user to url
@@ -176,8 +180,8 @@ After authorization is complete, the user will be redirected to
 This request should be handled as follows:
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret)
+local bbl = require("bbl-twitter")
+local c = client(config.consumer_key, config.consumer_secret)
 
 -- TODO: get oauth_verifier from the url
 local verifier = ...
@@ -188,9 +192,9 @@ c.req_token = ...
 c.req_secret = ...
 
 -- Now, trade the verifier for an access token
-get_access_token(c, verifier)
+bbl.get_access_token(c, verifier)
 
-update_status(c, "Look ma, I just authenticated my Lua twitter app!")
+bbl.update_status(c, "Look ma, I just authenticated my Lua twitter app!")
 print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
                     c.screen_name, c.token_key, c.token_secret))
 ```
@@ -205,21 +209,21 @@ This assumes you already have an access token, obtained by any method
 described above.
 
 ```lua
-require("bbl-twitter")
-c=client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
-signed_request(c, "/1/statuses/update.xml", {status = "Look ma, tweets from Lua!"}, "POST")
+local bbl = require("bbl-twitter")
+local c = bbl.client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
+bbl.signed_request(c, "/1/statuses/update.xml", {status = "Look ma, tweets from Lua!"}, "POST")
 ```
 
 ### Provide bbl-twitter options in a global 'twitter_config' table
 
 ```lua
-require("bbl-twitter")
+local bbl = require("bbl-twitter")
 twitter_config.openssl = "/opt/bin/openssl" -- if your openssl is not on the PATH
 twitter_config.consumer_key = "myconsumerkey"
 twitter_config.consumer_secret = "myconsumersecret"
 twitter_config.token_key = "myaccesstoken"
 twitter_config.token_secret = "myaccesssecret"
-update_status(client(), "Look ma, global settings!")
+bbl.update_status(client(), "Look ma, global settings!")
 ```
 
 ## Alternatives
@@ -239,5 +243,4 @@ fully-featured option may be ltwitter - https://github.com/TheLinx/ltwitter
 
 ## Todo
 
-* Make less bodgy
-* Add more Twitter API features (parsing JSON/XML w/o additional dependencies FTL)
+* Add more Twitter API features (parsing JSON/XML without additional dependencies is hard.)
