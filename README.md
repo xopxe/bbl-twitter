@@ -95,7 +95,7 @@ c:update_status("Look ma, tweets from Lua!")
 
 ### Tweet w/ error handling
 
-When a library call fails, it will return nil followined by an error message, so
+When a library call fails, it will return nil followed by an error message, so
 the returns of the various functions can be handled using the `assert`
 function. This example shows how to handle errors in client() and update_status(), but
 it applies to all other functions as well.
@@ -232,11 +232,7 @@ environment. http://regex.info/blog/lua/twitter
 
 bbl-twitter was inspired by "shtter" shell twitter client for OpenWRT,
 by "lostman" http://lostman-worlds-end.blogspot.com/2010/05/openwrt_22.html
-(lostman's is better if you want command-line tweeting on a very
-severe budget!)
 
-If you have easy access to luarocks + working C compiler then a better
-fully-featured option may be ltwitter - https://github.com/TheLinx/ltwitter
 
 ## Todo
 
