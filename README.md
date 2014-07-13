@@ -208,7 +208,7 @@ described above.
 ```lua
 local bblt = require("bbl-twitter")
 local c = bblt.client(config.consumer_key, config.consumer_secret, config.token_key, config.token_secret)
-c:signed_request("/1.1/statuses/update.xml", {status = "Look ma, tweets from Lua!"}, "POST")
+c:signed_request("/1.1/statuses/update.json", {status = "Look ma, tweets from Lua!"}, "POST")
 ```
 
 ### Provide bbl-twitter options in a global 'twitter_config' table
