@@ -245,7 +245,7 @@ function M.get_access_token(client, verifier)
 		oauth_token=client.req_token,
 		oauth_verifier=verifier
 	}
-	local s, r = pcall(M.signed_request, client, "/oauth/access_token", args, "GET")
+	local s, r = M.signed_request(client, "/oauth/access_token", args, "GET")
 	if not s then
 		return nil, "Unable to get access token: " .. tostring(r)
 	end
