@@ -12,8 +12,13 @@
 --		  * some url changed
 --		  * moved to https (added dependency on luasec)
 
+-- adapted by vsky279, lukas@voborsky.name
+--   * Twitter API v2
+
 local http = require("socket.http")
 local https = require("ssl.https")
+local ltn12 = require("ltn12")
+local JSON = require("JSON")
 
 local M = {}
 
@@ -122,6 +127,17 @@ local function sign_http_args(client, method, url, args)
 	return join_http_args(args) .. "&oauth_signature=" .. url_encode(hash)
 end
 
+local function sign_http_args_t(client, method, url, auth_args) 
+	local query = string.format("%s&%s&%s", method, url_encode(url), url_encode(join_http_args(auth_args)))
+	local cmd = string.format(
+    "echo -n \"%s\" | %s sha1 -hmac \"%s&%s\" -binary | %s base64",
+    query, M.twitter_config.openssl,
+    client.consumer_secret, client.token_secret or "",
+    M.twitter_config.openssl)
+	local hash = cmd_output(cmd)
+	hash = string.gsub(hash, "\n", "")
+  return url_encode(hash)
+end
 
 local function https_get(client, url, args)
 	local argdata = sign_http_args(client, "GET", url, args)
@@ -138,10 +154,35 @@ end
 
 local function https_post(client, url, postargs)
 	local b, c = https.request(url, sign_http_args(client, "POST", url, postargs))								
-	if b and (c ~= 200) then
+	if b and not (c >= 200 and c <= 204) then
 		return nil, "Error " .. c .. ": " .. b
 	else
 		return b, c
+	end
+end
+
+local function https_post_JSON(client, url, auth_args, postargs, body)
+  local header_auth = ""
+  for k, v in orderedPairs(auth_args) do
+      header_auth = header_auth  .. (#header_auth == 0 and "" or  ", ")  .. k .. "=" .. '"' .. v .. '"'
+  end
+  
+  local hash = sign_http_args_t(client, "POST", url, auth_args) 
+  local response = {}
+  
+  postargs.Authorization = "OAuth " .. header_auth .. ', oauth_signature="' .. hash .. '"'
+  local b, c = https.request {
+    method = "POST",
+    url = url,
+    headers = postargs,
+    source = ltn12.source.string(body),
+    sink = ltn12.sink.table(response),
+  }
+
+	if response and not (c >= 200 and c <= 204) then
+		return nil, "Error " .. c .. ": " .. table.concat(response) --b
+	else
+		return table.concat(response), c
 	end
 end
 
@@ -269,7 +310,7 @@ end
 --
 -- Returns the response body when the request was succesful. Raises an
 -- error when the request fails for whatever reason.
-function M.signed_request(client, url, args, method)
+function M.signed_request(client, url, args, method, body)
 	if not client.token_secret then
 		return nil, "Cannot perform signed request without token_secret"
 	end
@@ -281,11 +322,15 @@ function M.signed_request(client, url, args, method)
 		url = M.twitter_config.url .. url
 	end
 
-	args = get_base_args(client, args)
 	local r, e
 	if (method == "GET") then
+    args = get_base_args(client, args)
 		r, e = https_get(client, url, args)
-	else
+	elseif body then
+    auth_args = get_base_args(client, {})
+		r, e = https_post_JSON(client, url, auth_args, args, body)
+  else
+    args = get_base_args(client, args)
 		r, e = https_post(client, url, args)
 	end
 	if not r then
@@ -295,7 +340,11 @@ function M.signed_request(client, url, args, method)
 end
 
 function M.update_status(client, tweet)
-	return M.signed_request(client, "/1.1/statuses/update.json", {status = tweet})
+  local body = JSON:encode({["text"] = tweet})
+  return M.signed_request(client, "/2/tweets", {
+        ["Content-Type"] = "application/json",
+        ["Content-Length"] = string.len(body),
+      }, 'POST', body)
 end
 
 function M.client(consumer_key, consumer_secret, token_key, token_secret, verifier)
