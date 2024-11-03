@@ -15,7 +15,7 @@ local config = {
 local c = bblt.client(config.consumer_key, config.consumer_secret)
 -- The following function will prompt on the console to visit a URL and
 -- enter a PIN for out-of-band authentication
-c:out_of_band_cli(c)
+c:out_of_band_cli()
 
 c:update_status("Look ma, I just authenticated my Lua twitter app!")
 print(string.format("Authorized by user '%s'. My secrets are token_key '%s' token_secret '%s'",
